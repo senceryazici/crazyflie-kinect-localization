@@ -13,15 +13,24 @@ class ColorDetectorNode(object):
 
     def __init__(self):
         # get parameters
-        self.cf_color_lookup = rospy.get_param("cf_color_lookup", default={"GREEN": "cf2", "red": "cf1", "blue": "cf3"})
-        self.y_lower = rospy.get_param("~y_lower", default=0)
-        self.y_upper = rospy.get_param("~y_upper", default=255)
-        self.cr_lower = rospy.get_param("~cr_lower", default=70)
-        self.cr_upper = rospy.get_param("~cr_upper", default=105) # was 110
-        self.cb_lower = rospy.get_param("~cb_lower", default=120)
-        self.cb_upper = rospy.get_param("~cb_upper", default=140) # was 150
-        self.min_detection_radius = rospy.get_param("~min_detection_radius", default=9.5)
+        self.cf_color_lookup = rospy.get_param("cf_color_lookup", default={"GREEN": "cf2", "RED": "cf1", "BLUE": "cf3"})
+        # p[i / 2] = (cr > 140 && cr < 190 && cb > 70  && cb < 120) ? max : min; RED
+        
+        self.r_y_lower = rospy.get_param("~r_y_lower", default=150)
+        self.r_y_upper = rospy.get_param("~r_y_upper", default=255)
+        self.r_cr_lower = rospy.get_param("~r_cr_lower", default=140)
+        self.r_cr_upper = rospy.get_param("~r_cr_upper", default=250) # was 110
+        self.r_cb_lower = rospy.get_param("~r_cb_lower", default=50)
+        self.r_cb_upper = rospy.get_param("~r_cb_upper", default=120) # was 150
 
+        self.g_y_lower = rospy.get_param("~g_y_lower", default=0)
+        self.g_y_upper = rospy.get_param("~g_y_upper", default=255)
+        self.g_cr_lower = rospy.get_param("~g_cr_lower", default=70)
+        self.g_cr_upper = rospy.get_param("~g_cr_upper", default=105) # was 110
+        self.g_cb_lower = rospy.get_param("~g_cb_lower", default=120)
+        self.g_cb_upper = rospy.get_param("~g_cb_upper", default=140) # was 150
+
+        self.min_detection_radius = rospy.get_param("~min_detection_radius", default=4)
 
         self.bridge = CvBridge()
 
@@ -31,6 +40,12 @@ class ColorDetectorNode(object):
 
 
     def image_callback(self, data):
+        self.r_y_lower = rospy.get_param("~r_y_lower", default=0)
+        self.r_y_upper = rospy.get_param("~r_y_upper", default=255)
+        self.r_cr_lower = rospy.get_param("~r_cr_lower", default=140)
+        self.r_cr_upper = rospy.get_param("~r_cr_upper", default=190) # was 110
+        self.r_cb_lower = rospy.get_param("~r_cb_lower", default=70)
+        self.r_cb_upper = rospy.get_param("~r_cb_upper", default=120) # was 150
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -39,18 +54,45 @@ class ColorDetectorNode(object):
         frame_gau_blur = cv2.GaussianBlur(frame, (3, 3), 0)
         ycrcb = cv2.cvtColor(frame_gau_blur, cv2.COLOR_BGR2YCrCb)
 
-        greenLower = (self.y_lower, self.cr_lower, self.cb_lower)
-        greenUpper = (self.y_upper, self.cr_upper, self.cb_upper)
+        greenLower = (self.g_y_lower, self.g_cr_lower, self.g_cb_lower)
+        greenUpper = (self.g_y_upper, self.g_cr_upper, self.g_cb_upper)
+
+        redLower = (self.r_y_lower, self.r_cr_lower, self.r_cb_lower)
+        redUpper = (self.r_y_upper, self.r_cr_upper, self.r_cb_upper)
+
+        blueLower = (self.g_y_lower, self.g_cr_lower, self.g_cb_lower)
+        blueUpper = (self.g_y_upper, self.g_cr_upper, self.g_cb_upper)
 
         green_mask = cv2.inRange(ycrcb, greenLower, greenUpper)
+        red_mask = cv2.inRange(ycrcb, redLower, redUpper)
         # p_b[i / 2] = (cr > 110 && cr < 140 && cb > 140 && cb < 255) ? max : min;//cr 100-130 BLUE
+
         # p[i / 2] = (cr > 140 && cr < 190 && cb > 70  && cb < 120) ? max : min; RED
 
-        cnts = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL,
-		cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        if len(cnts) > 0:
-            c = max(cnts, key=cv2.contourArea)
+        r_cnts = cv2.findContours(red_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        r_cnts = imutils.grab_contours(r_cnts)
+        if len(r_cnts) > 0:
+            c = max(r_cnts, key=cv2.contourArea)
+            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            if radius > self.min_detection_radius:
+                cv2.circle(frame, (int(x), int(y)), int(radius), (0, 0, 255), 3)
+                cv2.circle(frame, (int(frame.shape[1]/2), int(frame.shape[0]/2)), int(2), (255, 0, 0), 2)
+                cv2.putText(frame, self.cf_color_lookup["RED"], (int(x) + 10, int(y)), cv2.FONT_HERSHEY_PLAIN, 2.5, (0, 0, 255), 2)
+                msg = BallDetection()
+                msg.color = "RED"
+                msg.frame_height = data.height
+                msg.frame_width = data.width
+                msg.header.stamp = rospy.Time.now()
+                msg.header.frame_id = "/kinect2"
+                msg.x = x
+                msg.y = y
+                msg.radius = radius
+                self.detection_pub.publish(msg)
+
+        g_cnts = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        g_cnts = imutils.grab_contours(g_cnts)
+        if len(g_cnts) > 0:
+            c = max(g_cnts, key=cv2.contourArea)
             ((x, y), radius) = cv2.minEnclosingCircle(c)
 
             if radius > self.min_detection_radius:
@@ -59,12 +101,16 @@ class ColorDetectorNode(object):
                 cv2.putText(frame, self.cf_color_lookup["GREEN"], (int(x) + 10, int(y)), cv2.FONT_HERSHEY_PLAIN, 2.5, (0, 0, 255), 2)
                 msg = BallDetection()
                 msg.color = "GREEN"
+                msg.frame_height = data.height
+                msg.frame_width = data.width
                 msg.header.stamp = rospy.Time.now()
                 msg.header.frame_id = "/kinect2"
                 msg.x = x
                 msg.y = y
                 msg.radius = radius
                 self.detection_pub.publish(msg)
+
+
 
         try:
             msg = self.bridge.cv2_to_imgmsg(frame, "bgr8")
