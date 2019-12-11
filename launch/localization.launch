@@ -1,4 +1,26 @@
 <launch>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 map kinect2_rgb_optical_frame"/>
+    <arg name="device_id" default="060314733847"/>
 
+    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 map kinect2_rgb_optical_frame"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf_ir" args="0 0 2.17 0 0 -2.12 map kinect2_ir_optical_frame"/>
+
+    <include file="$(find crazyflie_kinect_localization)/launch/kinect2_bridge.launch"/>
+
+    <node pkg="crazyflie_kinect_localization" type="color_detector.py" name="color_detection_node">
+        <rosparam file="$(find crazyflie_kinect_localization)/config/default.yaml" command="load"/>
+
+        <remap from="detection" to="/detection"/>
+        <remap from="detection_image" to="/detection_image"/>
+        <remap from="image" to="/kinect2/hd/image_color"/>
+    </node>
+
+    <node pkg="crazyflie_kinect_localization" type="localizor.py" name="depth_detection_node">
+        <rosparam file="$(find crazyflie_kinect_localization)/config/default.yaml" command="load"/>
+        
+        <remap from="detection" to="/detection"/>
+        <remap from="depth_image" to="/kinect2/hd/image_depth_rect"/>
+    </node>
+    
+    <node pkg="rviz" type="rviz" name="rviz_view" args=" $(find crazyflie_kinect_localization)/rviz/default.rviz"/>
+        
 </launch>

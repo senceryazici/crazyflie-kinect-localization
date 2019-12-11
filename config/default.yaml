@@ -1,0 +1,31 @@
+
+min_detection_radius: 4
+
+# Mask Options
+r_y_lower: 150
+r_y_upper: 255
+r_cr_lower: 140
+r_cr_upper: 250
+r_cb_lower: 50
+r_cb_upper: 120
+g_y_lower: 0
+g_y_upper: 255
+g_cr_lower: 70
+g_cr_upper: 105
+g_cb_lower: 120
+g_cb_upper: 140
+b_y_lower: 0
+b_y_upper: 255
+b_cr_lower: 110
+b_cr_upper: 140
+b_cb_lower: 140
+b_cb_upper: 255
+
+
+# Directly copied from config/<device_id>/calib_color.yaml
+cameraMatrix:
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 1.0815577461638704e+03, 0., 9.6726278213157309e+02, 0.,
+       1.0781758691523264e+03, 5.4445604167967088e+02, 0., 0., 1. ]

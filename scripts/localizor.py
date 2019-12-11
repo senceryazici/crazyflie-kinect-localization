@@ -17,12 +17,14 @@ class LocalizerNode(object):
     def __init__(self):
         self.cf_color_lookup = rospy.get_param("cf_color_lookup", default={"GREEN": "cf2", "RED": "cf1", "BLUE": "cf3"})
 
-        self.detection_sub = rospy.Subscriber("/detection", BallDetection, self.detection_callback)
-        self.depth_sub = rospy.Subscriber("/kinect2/hd/image_depth_rect", Image, self.depth_callback)
-        self.pose_pub = rospy.Publisher("/test", PointStamped, queue_size=1)
+        self.detection_sub = rospy.Subscriber("detection", BallDetection, self.detection_callback)
+        self.depth_sub = rospy.Subscriber("depth_image", Image, self.depth_callback)
+
         # in calib_color.yaml file
         self.camera_matrix = [ 1.0815577461638704e+03, 0., 9.6726278213157309e+02, 0.,
         1.0781758691523264e+03, 5.4445604167967088e+02, 0., 0., 1. ]
+
+        self.camera_matrix = rospy.get_param("~cameraMatrix", default={"data": [0 for i in range(9)]})["data"]
 
         # camera matrix (intrinsic matrix)
         # fx  0  cx
@@ -33,23 +35,10 @@ class LocalizerNode(object):
         self.f_y = self.camera_matrix[4]
         self.c_y = self.camera_matrix[5]
 
-
-
-
-        # self.kinect_depth_sub = rospy.Subscriber()
-        # distance = 0.1236 * tan(rawDisparity / 2842.5 + 1.1863)
-        # distance = (float)(1.0 / ((double)(depthValue) * -0.0030711016 + 3.3309495161));
         self.bridge = CvBridge()
         self.depth_frame = None
         self.keys = ["GREEN", "RED", "BLUE"]
 
-        # Kinect1
-        # Horizontal FOV: 58,5 (as distributed over 320 pixels horizontal)
-        # Vertical FOV: 45,6 (as distributed over 240 pixels vertical).
-
-
-        # Kinect 2
-        # yatay x dikey = 70.6 x 60 degrees
         self.detections = {
         }
         self.positions = {
@@ -78,21 +67,6 @@ class LocalizerNode(object):
                                 rospy.Time.now(),
                                 cf_prefix,
                                 "/kinect2_rgb_optical_frame")
-
-                # p = PointStamped()
-                # p.header.frame_id = "/kinect2_rgb_optical_frame"
-                # p.point.x = x_world
-                # p.point.y = y_world
-                # p.point.z = depth
-
-                # self.pose_pub.publish(p)
-
-                # print (x_world, y_world, depth)
-
-
-
-
-
 
     def detection_callback(self, data):
         self.detections[data.color] = data
