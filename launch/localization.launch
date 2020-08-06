@@ -12,14 +12,18 @@
         <remap from="detection" to="/detection"/>
         <remap from="detection_image" to="/detection_image"/>
         <remap from="image" to="/kinect2/hd/image_color"/>
+        <remap from="depth_image" to="/kinect2/hd/image_depth_rect"/>
     </node>
 
-    <node pkg="crazyflie_kinect_localization" type="localizor.py" name="depth_detection_node">
+    <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+        <rosparam command="load" file="$(find crazyflie_kinect_localization)/config/ekf_template.yaml" />
+    </node> -->
+
+    <!-- <node pkg="crazyflie_kinect_localization" type="localizor.py" name="depth_detection_node">
         <rosparam file="$(find crazyflie_kinect_localization)/config/default.yaml" command="load"/>
         
         <remap from="detection" to="/detection"/>
-        <remap from="depth_image" to="/kinect2/hd/image_depth_rect"/>
-    </node>
+    </node> -->
     
     <node pkg="rviz" type="rviz" name="rviz_view" args=" $(find crazyflie_kinect_localization)/rviz/default.rviz"/>
         

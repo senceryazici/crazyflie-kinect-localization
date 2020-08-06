@@ -1,25 +1,47 @@
 
-min_detection_radius: 4
+min_detection_radius: 5
+max_detection_radius: 16
 
 # Mask Options
-r_y_lower: 150
-r_y_upper: 255
-r_cr_lower: 140
-r_cr_upper: 250
-r_cb_lower: 50
-r_cb_upper: 120
-g_y_lower: 0
-g_y_upper: 255
-g_cr_lower: 70
-g_cr_upper: 105
-g_cb_lower: 120
-g_cb_upper: 140
-b_y_lower: 0
-b_y_upper: 255
-b_cr_lower: 110
-b_cr_upper: 140
-b_cb_lower: 140
-b_cb_upper: 255
+# r_y_lower: 185
+# r_y_upper: 255
+# r_cr_lower: 155
+# r_cr_upper: 235
+# r_cb_lower: 94
+# r_cb_upper: 190
+
+# 21
+r_y_lower: 5
+r_y_upper: 40
+
+# 110,925
+r_cr_lower: 90
+r_cr_upper: 255
+
+# 239
+r_cb_lower: 120
+r_cb_upper: 255
+
+
+g_y_lower: 65
+g_y_upper: 93
+
+g_cr_lower: 80
+g_cr_upper: 200
+
+g_cb_lower: 110
+g_cb_upper: 255
+
+
+
+b_y_lower: 105
+b_y_upper: 125
+
+b_cr_lower: 80
+b_cr_upper: 180
+
+b_cb_lower: 80
+b_cb_upper: 180
 
 
 # Directly copied from config/<device_id>/calib_color.yaml
