@@ -8,7 +8,9 @@ from crazyflie_kinect_localization.msg import BallDetection
 import imutils
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import tf
-
+import time
+import numpy as np
+import math
 
 class ColorDetectorNode(object):
     """ Detects Red Green Blue colored ping pong balls, from kinect hd RGB image topic, 
@@ -17,7 +19,7 @@ class ColorDetectorNode(object):
     def __init__(self):
 
         self.cf_color_lookup = rospy.get_param("cf_color_lookup", default={
-                                               "GREEN": "cf2", "RED": "cf1", "BLUE": "cf3"})
+                                               "GREEN": "cf1", "RED": "cf2", "BLUE": "cf3"})
         self.r_y_lower = rospy.get_param("~r_y_lower", default=150)
         self.r_y_upper = rospy.get_param("~r_y_upper", default=255)
         self.r_cr_lower = rospy.get_param("~r_cr_lower", default=140)
@@ -58,7 +60,7 @@ class ColorDetectorNode(object):
             "detection_image", Image, queue_size=2)
         self.depth_sub = rospy.Subscriber(
             "depth_image", Image, self.depth_callback)
-        
+        self.rate = rospy.Rate(30)
         self.pose_publishers = {
             "RED": rospy.Publisher("/{}/pose".format(self.cf_color_lookup["RED"]), PoseWithCovarianceStamped, queue_size=2),
             "GREEN": rospy.Publisher("/{}/pose".format(self.cf_color_lookup["GREEN"]), PoseWithCovarianceStamped, queue_size=2),
@@ -68,6 +70,9 @@ class ColorDetectorNode(object):
         # in calib_color.yaml file
         self.camera_matrix = [1.0815577461638704e+03, 0., 9.6726278213157309e+02, 0.,
                               1.0781758691523264e+03, 5.4445604167967088e+02, 0., 0., 1.]
+        
+        # self.camera_matrix = [1073.48539, 0., 970.95975, 0.,
+        #                       1077.91738, 515.18869, 0., 0., 1.]
 
         self.camera_matrix = rospy.get_param(
             "~cameraMatrix", default={"data": [0 for i in range(9)]})["data"]
@@ -108,38 +113,11 @@ class ColorDetectorNode(object):
             rospy.logerr(e)
             return
 
-        for key in self.keys:
-            if self.detections.has_key(key):
-                detection = self.detections[key]
-
-                depth = self.depth_frame[detection.y][detection.x] / 1000.0
-                x = (detection.x - self.c_x) * depth / self.f_x
-                y = (detection.y - self.c_y) * depth / self.f_y
-                cf_prefix = self.cf_color_lookup[key]
-
-                pose_msg = PoseWithCovarianceStamped()
-                pose_msg.header.frame_id = "/kinect2_rgb_optical_frame"
-                pose_msg.pose.pose.position.x = x
-                pose_msg.pose.pose.position.y = y
-                pose_msg.pose.pose.position.z = depth
-                pose_msg.pose.pose.orientation.w = 1.0
-
-                self.pose_publishers[key].publish(pose_msg)
-
-                br = tf.TransformBroadcaster()
-                br.sendTransform((x, y, depth),
-                                 tf.transformations.quaternion_from_euler(
-                                     0, 0, 0),
-                                 rospy.Time.now(),
-                                 cf_prefix,
-                                 "/kinect2_rgb_optical_frame")
-
     def image_callback(self, data):
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             rospy.logerr(e)
-
         frame_gau_blur = cv2.GaussianBlur(frame, (3, 3), 0)
         # ycrcb = cv2.cvtColor(frame_gau_blur, cv2.COLOR_BGR2YCrCb)
         ycrcb = cv2.cvtColor(frame_gau_blur, cv2.COLOR_BGR2HSV)
@@ -161,8 +139,8 @@ class ColorDetectorNode(object):
         r_cnts = cv2.findContours(
             red_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         r_cnts = imutils.grab_contours(r_cnts)
-        if len(r_cnts) > 0:
-            ((x, y), radius) = self.detect_contours(r_cnts)
+        if len(r_cnts) > 0 and False:
+            ((x, y), radius, depth) = self.detect_contours(r_cnts)
 
             if radius is not None:
                 cv2.circle(frame, (int(x), int(y)),
@@ -180,13 +158,13 @@ class ColorDetectorNode(object):
                 msg.x = x
                 msg.y = y
                 msg.radius = radius
-                self.detections[msg.color] = msg
+                self.detections[msg.color] = (msg, depth)
 
         g_cnts = cv2.findContours(
             green_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         g_cnts = imutils.grab_contours(g_cnts)
         if len(g_cnts) > 0:
-            ((x, y), radius) = self.detect_contours(g_cnts)
+            ((x, y), radius, depth) = self.detect_contours(g_cnts)
             if radius is not None:
                 cv2.circle(frame, (int(x), int(y)),
                            int(radius), (0, 0, 255), 3)
@@ -203,14 +181,14 @@ class ColorDetectorNode(object):
                 msg.x = x
                 msg.y = y
                 msg.radius = radius
-                self.detections[msg.color] = msg
+                self.detections[msg.color] = (msg, depth)
 
         b_cnts = cv2.findContours(
             blue_mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         b_cnts = imutils.grab_contours(b_cnts)
 
-        if len(b_cnts) > 0:
-            ((x, y), radius) = self.detect_contours(b_cnts)
+        if len(b_cnts) > 0 and False:
+            ((x, y), radius, depth) = self.detect_contours(b_cnts)
             if radius is not None:
                 cv2.circle(frame, (int(x), int(y)),
                            int(radius), (0, 0, 255), 3)
@@ -228,32 +206,100 @@ class ColorDetectorNode(object):
                 msg.x = x
                 msg.y = y
                 msg.radius = radius
-                # self.detections[msg.color] = msg
+                # self.detections[msg.color] = (msg, depth)
 
+
+        
+
+        # frame = cv2.bitwise_and(ycrcb, ycrcb, mask=green_mask)
+        self.depth_clear_flag = True
         try:
             msg = self.bridge.cv2_to_imgmsg(frame, "bgr8")
             self.detection_image_pub.publish(msg)
         except CvBridgeError as e:
             rospy.logerr(e)
 
+    def get_lower_half(self, data):
+        data = data.flatten()
+        mean = np.mean(data)
+        if mean == 0.0 or len(data)==0:
+            return [0]
+        return [i for i in data if i <= mean]
+
     def detect_contours(self, contours):
+        # print contours
+        # contour_list = []
+        # for contour in contours:
+        #     approx = cv2.approxPolyDP(contour,0.01*cv2.arcLength(contour,True),True)
+        #     area = cv2.contourArea(contour)
+        #     if ((len(approx) > 8) & (len(approx) < 23) & (area > 250) ):
+        #         print area
+        #         contour_list.append(contour)
+        # contours = contour_list
+        print len(contours)
+        
         possible_match = []
+        radiuses = []
         for cont in contours:
             area = cv2.contourArea(cont)
             ((x, y), radius) = cv2.minEnclosingCircle(cont)
-            depth = self.get_depth(x, y)
-            if depth > 4.0 or depth < 0.2:
+
+            # xlist = [x+i for i in range(-int(radius / 2), int(radius / 2))] 
+            # ylist = [y+i for i in range(-int(radius / 2), int(radius / 2))] 
+            # matrix = np.array(np.zeros(len(ylist)*len(xlist))).reshape((len(xlist), len(ylist)))
+            # for i in range(len(xlist)):
+            #     for j in range(len(ylist)):
+            #         depth = self.get_depth(xlist[i], ylist[j])
+            #         matrix[i][j] = depth
+            # depth = np.mean(self.get_lower_half(matrix))
+            depth = self.get_depth(x,y )
+
+
+            if depth > 5.0 or depth < 0.1 or math.isnan(depth):
                 continue
             if not (radius > self.min_detection_radius and radius < self.max_detection_radius):
                 continue
-            possible_match.append(((x, y), radius))
-        if len(possible_match) > 0:
-            return possible_match[0]
-        else:
-            return ((None, None), None)
+            possible_match.append(((x, y), radius, depth))
+            radiuses.append(radius)
 
+        if len(possible_match) > 0:
+            min_rad = min(radiuses)
+            index = radiuses.index(min_rad)
+            return possible_match[index]
+        else:
+            return ((None, None), None, None)
+
+
+    def spin(self):
+        while not rospy.is_shutdown():
+            for key in self.keys:
+                if self.detections.has_key(key):
+                    detection, depth = self.detections[key]
+
+                    x = (detection.x - self.c_x) * depth / self.f_x
+                    y = (detection.y - self.c_y) * depth / self.f_y
+                    cf_prefix = self.cf_color_lookup[key]
+
+                    pose_msg = PoseWithCovarianceStamped()
+                    pose_msg.header.frame_id = "/kinect2_rgb_optical_frame"
+                    pose_msg.header.stamp = rospy.Time.now()
+                    pose_msg.pose.pose.position.x = x
+                    pose_msg.pose.pose.position.y = y
+                    pose_msg.pose.pose.position.z = depth
+                    pose_msg.pose.pose.orientation.w = 1.0
+
+                    self.pose_publishers[key].publish(pose_msg)
+
+                    br = tf.TransformBroadcaster()
+                    br.sendTransform((x, y, depth),
+                                    tf.transformations.quaternion_from_euler(
+                                        0, 0, 0),
+                                    rospy.Time.now(),
+                                    cf_prefix,
+                                    "/kinect2_rgb_optical_frame")
+            self.rate.sleep()
 
 if __name__ == "__main__":
     rospy.init_node("kinect_color_detection_node")
     node = ColorDetectorNode()
-    rospy.spin()
+    node.spin()

@@ -92,14 +92,14 @@
   </node> -->
 
   <!-- qhd point cloud (960 x 540) -->
-  <!-- <node pkg="nodelet" type="nodelet" name="$(arg base_name)_points_xyzrgb_qhd" machine="$(arg machine)"
+  <node pkg="nodelet" type="nodelet" name="$(arg base_name)_points_xyzrgb_qhd" machine="$(arg machine)"
         args="load depth_image_proc/point_cloud_xyzrgb $(arg nodelet_manager)" respawn="$(arg respawn)">
     <remap from="rgb/camera_info"             to="$(arg base_name)/qhd/camera_info"/>
     <remap from="rgb/image_rect_color"        to="$(arg base_name)/qhd/image_color_rect"/>
     <remap from="depth_registered/image_rect" to="$(arg base_name)/qhd/image_depth_rect"/>
     <remap from="depth_registered/points"     to="$(arg base_name)/qhd/points"/>
     <param name="queue_size" type="int" value="$(arg queue_size)"/>
-  </node> -->
+  </node>
 
   <!-- hd point cloud (1920 x 1080) -->
   <!-- <node pkg="nodelet" type="nodelet" name="$(arg base_name)_points_xyzrgb_hd" machine="$(arg machine)"

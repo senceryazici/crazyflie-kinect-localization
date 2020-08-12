@@ -1,19 +1,50 @@
 <launch>
     <arg name="device_id" default="060314733847"/>
 
-    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 map kinect2_rgb_optical_frame"/>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf_ir" args="0 0 2.17 0 0 -2.12 map kinect2_ir_optical_frame"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 world kinect2_rgb_optical_frame"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf_ir" args="0 0 2.17 0 0 -2.12 world kinect2_ir_optical_frame"/>
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="ws_center_publisher" args="-0.068, 2.081, -0.002 0.0 0.0 0.0 1 world ws_center"/>
+
 
     <include file="$(find crazyflie_kinect_localization)/launch/kinect2_bridge.launch"/>
 
-    <node pkg="crazyflie_kinect_localization" type="color_detector.py" name="color_detection_node">
+    <node pkg="crazyflie_kinect_localization" type="color_detector.py" name="color_detection_node" output="screen">
         <rosparam file="$(find crazyflie_kinect_localization)/config/default.yaml" command="load"/>
 
         <remap from="detection" to="/detection"/>
         <remap from="detection_image" to="/detection_image"/>
-        <remap from="image" to="/kinect2/hd/image_color"/>
+        <remap from="image" to="/kinect2/hd/image_color_rect"/>
         <remap from="depth_image" to="/kinect2/hd/image_depth_rect"/>
     </node>
+
+
+
+
+    <arg name="uri1" default="radio://0/80/2M/E7E7E7E7E6" />
+    <arg name="frame1" default="cf1" />
+
+    <arg name="uri2" default="radio://0/80/2M/E7E7E7E7E7" />
+    <arg name="frame2" default="cf2" />
+
+    <!-- <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch"/> -->
+
+    <!-- <group ns="cf1">
+        <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+            <param name="uri" value="$(arg uri1)" />
+            <param name="tf_prefix" value="cf1" />
+            <param name="enable_logging" value="False" />
+        </node>
+
+        <include file="$(find crazyflie_controller)/launch/crazyflie2.launch">
+            <arg name="frame" value="$(arg frame1)" />
+        </include>
+    </group> -->
+
+
+
+
+
 
     <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
         <rosparam command="load" file="$(find crazyflie_kinect_localization)/config/ekf_template.yaml" />

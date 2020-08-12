@@ -1,6 +1,6 @@
 
 min_detection_radius: 5
-max_detection_radius: 16
+max_detection_radius: 50
 
 # Mask Options
 # r_y_lower: 185
@@ -21,6 +21,16 @@ r_cr_upper: 255
 # 239
 r_cb_lower: 120
 r_cb_upper: 255
+
+
+# g_y_lower: 0
+# g_y_upper: 255
+
+# g_cr_lower: 70
+# g_cr_upper: 110
+
+# g_cb_lower: 120
+# g_cb_upper: 150
 
 
 g_y_lower: 65
