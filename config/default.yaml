@@ -1,57 +1,39 @@
 
-min_detection_radius: 5
-max_detection_radius: 50
 
-# Mask Options
-# r_y_lower: 185
-# r_y_upper: 255
-# r_cr_lower: 155
-# r_cr_upper: 235
-# r_cb_lower: 94
-# r_cb_upper: 190
+cropbox_filter/base_frame: kinect2_rgb_optical_frame
+cropbox_filter/target_frame: ws_center
+cropbox_filter/use_transform: 1
+cropbox_filter/x_min: -1
+cropbox_filter/x_max: 1
+cropbox_filter/y_min: -1
+cropbox_filter/y_max: 1
+cropbox_filter/z_min: 0.1
+cropbox_filter/z_max: 1.5
 
-# 21
-r_y_lower: 5
-r_y_upper: 40
+red_color_filter/use_hsi: 1
+red_color_filter/r_min: -20
+red_color_filter/r_max: 30
+red_color_filter/g_min: 40
+red_color_filter/g_max: 255
+red_color_filter/b_min: 40
+red_color_filter/b_max: 255
 
-# 110,925
-r_cr_lower: 90
-r_cr_upper: 255
+green_color_filter/use_hsi: 1
+green_color_filter/r_min: 110
+green_color_filter/r_max: 130
+green_color_filter/g_min: 40
+green_color_filter/g_max: 255
+green_color_filter/b_min: 40
+green_color_filter/b_max: 255
 
-# 239
-r_cb_lower: 120
-r_cb_upper: 255
+blue_color_filter/use_hsi: 1
+blue_color_filter/r_min: 128
+blue_color_filter/r_max: 40
+blue_color_filter/g_min: 50
+blue_color_filter/g_max: 255
+blue_color_filter/b_min: 40
+blue_color_filter/b_max: 255
 
-
-# g_y_lower: 0
-# g_y_upper: 255
-
-# g_cr_lower: 70
-# g_cr_upper: 110
-
-# g_cb_lower: 120
-# g_cb_upper: 150
-
-
-g_y_lower: 65
-g_y_upper: 93
-
-g_cr_lower: 80
-g_cr_upper: 200
-
-g_cb_lower: 110
-g_cb_upper: 255
-
-
-
-b_y_lower: 105
-b_y_upper: 125
-
-b_cr_lower: 80
-b_cr_upper: 180
-
-b_cb_lower: 80
-b_cb_upper: 180
 
 
 # Directly copied from config/<device_id>/calib_color.yaml
