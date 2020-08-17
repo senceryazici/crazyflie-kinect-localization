@@ -1,7 +1,8 @@
 <launch>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 world kinect2_rgb_optical_frame"/>
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 world kinect2_rgb_optical_frame"/>
     <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf_ir" args="0 0 2.17 0 0 -2.12 world kinect2_ir_optical_frame"/>
     <node pkg="tf2_ros" type="static_transform_publisher" name="ws_center_publisher" args="-0.068, 2.081, -0.002 0.0 0.0 0.0 1 world ws_center"/>
+     -->
     <node name="cropbox_filter" pkg="simpcl" type="cropbox_filter" output="screen">
         <remap from="points_in" to="/kinect2/qhd/points"/>
         <remap from="points_out" to="/kinect2/qhd/points/filtered/cropbox"/>
@@ -9,11 +10,11 @@
         <param name="base_frame" type="string" value="/kinect2_rgb_optical_frame"/>
         <param name="target_frame" type="string" value="/ws_center"/>
 
-        <param name="x_min" type="double" value="-1.5"/>
-        <param name="x_max" type="double" value="1.5"/>
+        <param name="x_min" type="double" value="-1"/>
+        <param name="x_max" type="double" value="1"/>
 
-        <param name="y_min" type="double" value="-1.5"/>
-        <param name="y_max" type="double" value="1.5"/>
+        <param name="y_min" type="double" value="-1"/>
+        <param name="y_max" type="double" value="1"/>
 
         <param name="z_min" type="double" value="0.1"/>
         <param name="z_max" type="double" value="1.5"/>
@@ -25,13 +26,13 @@
 
         <param name="use_hsi" type="int" value="1"/>
         
-        <param name="r_min" type="double" value="50"/>
-        <param name="r_max" type="double" value="255"/>
+        <param name="r_min" type="double" value="-20"/>
+        <param name="r_max" type="double" value="30"/>
 
-        <param name="g_min" type="double" value="50"/>
+        <param name="g_min" type="double" value="40"/>
         <param name="g_max" type="double" value="255"/>
 
-        <param name="b_min" type="double" value="50"/>
+        <param name="b_min" type="double" value="40"/>
         <param name="b_max" type="double" value="255"/>
     </node>
 
@@ -57,13 +58,13 @@
 
         <param name="use_hsi" type="int" value="1"/>
         
-        <param name="r_min" type="double" value="50"/>
-        <param name="r_max" type="double" value="255"/>
+        <param name="r_min" type="double" value="-128"/>
+        <param name="r_max" type="double" value="-40"/>
 
         <param name="g_min" type="double" value="50"/>
         <param name="g_max" type="double" value="255"/>
 
-        <param name="b_min" type="double" value="50"/>
+        <param name="b_min" type="double" value="40"/>
         <param name="b_max" type="double" value="255"/>
     </node>
 

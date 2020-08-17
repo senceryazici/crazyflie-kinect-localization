@@ -4,21 +4,22 @@
     <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf" args="0 0 2.17 0 0 -2.12 world kinect2_rgb_optical_frame"/>
     <node pkg="tf2_ros" type="static_transform_publisher" name="kinect_tf_ir" args="0 0 2.17 0 0 -2.12 world kinect2_ir_optical_frame"/>
 
-    <node pkg="tf2_ros" type="static_transform_publisher" name="ws_center_publisher" args="-0.068, 2.081, -0.002 0.0 0.0 0.0 1 world ws_center"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="ws_center_publisher" args="-0.068, 2.554, -0.002 0.0 0.0 0.0 1 world ws_center"/>
 
 
     <include file="$(find crazyflie_kinect_localization)/launch/kinect2_bridge.launch"/>
 
-    <node pkg="crazyflie_kinect_localization" type="color_detector.py" name="color_detection_node" output="screen">
+    <!-- <node pkg="crazyflie_kinect_localization" type="color_detector.py" name="color_detection_node" output="screen">
         <rosparam file="$(find crazyflie_kinect_localization)/config/default.yaml" command="load"/>
 
         <remap from="detection" to="/detection"/>
         <remap from="detection_image" to="/detection_image"/>
         <remap from="image" to="/kinect2/hd/image_color_rect"/>
         <remap from="depth_image" to="/kinect2/hd/image_depth_rect"/>
-    </node>
+    </node> -->
 
 
+    <include file="$(find crazyflie_kinect_localization)/launch/pc_filter.launch"/>
 
 
     <arg name="uri1" default="radio://0/80/2M/E7E7E7E7E6" />
@@ -43,9 +44,6 @@
 
 
 
-
-
-
     <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
         <rosparam command="load" file="$(find crazyflie_kinect_localization)/config/ekf_template.yaml" />
     </node> -->
@@ -57,5 +55,16 @@
     </node> -->
     
     <node pkg="rviz" type="rviz" name="rviz_view" args=" $(find crazyflie_kinect_localization)/rviz/default.rviz"/>
-        
+
+    <node pkg="crazyflie_kinect_localization" type="point2tf.py" name="cf1_tf" output="screen">
+        <param name="cf" value="cf1"/>
+    </node>
+
+    <node pkg="crazyflie_kinect_localization" type="point2tf.py" name="cf2_tf" output="screen">
+        <param name="cf" value="cf2"/>
+    </node>
+
+    <!-- <node pkg="crazyflie_kinect_localization" type="point2tf.py" name="cf3_tf" output="screen">
+        <param name="cf" value="cf3"/>
+    </node> -->
 </launch>
