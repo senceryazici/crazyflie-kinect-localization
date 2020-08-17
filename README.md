@@ -9,6 +9,14 @@ This repository is actively used in my senior design project, NN-based multi age
 ## Setup, Location Of the Kinect v2 Sensor, and the Workspace/Flight Zone
 The Kinect Sensor is located approx 2.17 meters high pointing to ground tilted. The transformation between the Workspace Center / Flight Zone `/ws_center` and the `/kinect2_rgb_optical_frame` is defined in `launch/localization.launch` file.
 
+Transform Tree:
+![](images/tf.png)
+
+Transform Tree with point clouds:
+![](images/tf_with_points.png)
+
+
+
 `Note:` The launch file contains 3 transformations. The `/world` transformation is just a `*bridge*` and is `*not*` necessary, I've used that point (world) to take measurements. You can directly supply the transformation between `ws_center` and `kinect2_rgb_optical_frame`.
  
 `Todo:` The transformation between `kinect2_rgb_optical_frame` and `kinect2_ir_optical_frame` is given same, the transformation from `kinect2_ir_optical_frame` to `kinect2_rgb_optical_frame` can be given by the datasheet of the sensor.
